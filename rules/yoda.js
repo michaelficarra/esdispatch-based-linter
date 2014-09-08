@@ -33,7 +33,7 @@ module.exports = function (context) {
 
     return {
 
-        "BinaryExpression": function (err, node) {
+        "BinaryExpression": function (node) {
 
             if (always) {
 

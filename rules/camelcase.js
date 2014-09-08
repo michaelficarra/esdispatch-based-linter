@@ -39,7 +39,7 @@ module.exports = function(context) {
 
     return {
 
-        "Identifier": function(err, node, ancestors) {
+        "Identifier": function(node, ancestors) {
             var parent = ancestors[0];
 
             // Leading and trailing underscores are commonly used to flag private/protected identifiers, strip them

@@ -16,7 +16,7 @@ module.exports = function(context) {
     //--------------------------------------------------------------------------
 
     return {
-        "UnaryExpression[operator=void]": function(err, node) {
+        "UnaryExpression[operator=void]": function(node) {
             context.report(node, "Expected 'undefined' and instead saw 'void'.");
         }
     };
