@@ -1,0 +1,24 @@
+/**
+ * @fileoverview Rule to disallow use of void operator.
+ * @author Mike Sidorov
+ * @copyright 2014 Mike Sidorov. All rights reserved.
+ */
+"use strict";
+
+//------------------------------------------------------------------------------
+// Rule Definition
+//------------------------------------------------------------------------------
+
+module.exports = function(context) {
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        "UnaryExpression[operator=void]": function(err, node) {
+            context.report(node, "Expected 'undefined' and instead saw 'void'.");
+        }
+    };
+
+};
