@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/michaelficarra/esdispatch-based-linter",
   "dependencies": {
-    "esdispatch": "0.0.2",
+    "esdispatch": "0.0.3",
     "esprima": "^1.2.2"
   }
 }
