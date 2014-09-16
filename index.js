@@ -1,5 +1,6 @@
 var esprima = require('esprima');
 var Dispatcher = require('esdispatch');
+var TokenManager = require('./lib/TokenManager');
 
 var RULES = {
   camelcase: require('./rules/camelcase'),
@@ -23,10 +24,8 @@ function template(message, replacements) {
     return message;
 }
 
-function lint(js, cb) {
-  var dispatcher = new Dispatcher;
-  var messages = [];
-  function report(node, location, message, replacements) {
+function reporterGenerator(messages) {
+  return function report(node, location, message, replacements) {
     if (typeof location === "string") {
         replacements = message;
         message = location;
@@ -43,18 +42,11 @@ function lint(js, cb) {
         //source: api.getSource(node)
     });
   };
+}
 
-  for (var ruleId in RULES) {
-    if (!{}.hasOwnProperty.call(RULES, ruleId)) continue;
-    var rule = RULES[ruleId]({
-      report: report,
-      options: {}.hasOwnProperty.call(RULE_OPTIONS, ruleId) ? RULE_OPTIONS[ruleId] : []
-    });
-    for (var query in rule) {
-      if (!{}.hasOwnProperty.call(rule, query)) continue;
-      dispatcher.on(query, rule[query]);
-    }
-  }
+function lint(js, cb) {
+  var dispatcher = new Dispatcher;
+  var messages = [];
 
   try {
     var ast = esprima.parse(js, {
@@ -77,6 +69,23 @@ function lint(js, cb) {
     });
     cb(messages);
     return;
+  }
+
+  var report = reporterGenerator(messages);
+  var tokenManager = new TokenManager(ast.tokens);
+
+  var api = Object.create(tokenManager);
+  api.report = report;
+
+  for (var ruleId in RULES) {
+    if (!{}.hasOwnProperty.call(RULES, ruleId)) continue;
+    var context = Object.create(api);
+    context.options = {}.hasOwnProperty.call(RULE_OPTIONS, ruleId) ? RULE_OPTIONS[ruleId] : [];
+    var rule = RULES[ruleId](context);
+    for (var query in rule) {
+      if (!{}.hasOwnProperty.call(rule, query)) continue;
+      dispatcher.on(query, rule[query]);
+    }
   }
 
   dispatcher.observe(ast, function() {
