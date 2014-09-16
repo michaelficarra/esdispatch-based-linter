@@ -5,7 +5,8 @@ var TokenManager = require('./lib/TokenManager');
 var RULES = {
   camelcase: require('./rules/camelcase'),
   'no-void': require('./rules/no-void.js'),
-  'no-undefined': require('./rules/no-undefined.js'),
+  'no-undefined': require('./rules/no-undefined'),
+  'space-infix-ops': require('./rules/space-infix-ops'),
   yoda: require('./rules/yoda'),
 }
 var RULE_OPTIONS = {};
