@@ -9,6 +9,8 @@ var RULES = {
 }
 var RULE_OPTIONS = {};
 
+var SEVERITIES = { IGNORE: 0, WARN: 1, ERROR: 2 };
+
 function escapeRegExp(s) {
     return s.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
@@ -33,7 +35,7 @@ function lint(js, cb) {
 
     messages.push({
         //ruleId: ruleId,
-        //severity: severity,
+        severity: SEVERITIES.ERROR,
         node: node,
         message: template(message, replacements || {}),
         line: location.line,
@@ -54,14 +56,28 @@ function lint(js, cb) {
     }
   }
 
-  var ast = esprima.parse(js, {
-    loc: true,
-    range: true,
-    raw: true,
-    tokens: true,
-    comment: true,
-    attachComment: true
-  });
+  try {
+    var ast = esprima.parse(js, {
+      loc: true,
+      range: true,
+      raw: true,
+      tokens: true,
+      comment: true,
+      attachComment: true
+    });
+  } catch(e) {
+    messages.push({
+        ruleId: "",
+        severity: SEVERITIES.ERROR,
+        // messages come as "Line X: Unexpected token foo", so strip off leading part
+        message: e.message.substring(e.message.indexOf(":") + 1).trim(),
+        line: e.lineNumber,
+        column: e.column,
+        source: js.split(/(\r?\n)/)[(e.lineNumber - 1) * 2]
+    });
+    cb(messages);
+    return;
+  }
 
   dispatcher.observe(ast, function() {
     cb(messages);
