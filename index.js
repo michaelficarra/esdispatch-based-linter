@@ -46,8 +46,8 @@ function reporterGenerator(messages) {
 }
 
 function lint(js, cb) {
-  var dispatcher = new Dispatcher;
-  var messages = [];
+  // replace shebang with single-line comment
+  js = js.replace(/^#!([^\r\n]+[\r\n]+)/, "//$1");
 
   try {
     var ast = esprima.parse(js, {
