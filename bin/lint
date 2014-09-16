@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-var linter = require('..');
+var Linter = require('..');
 
-var next = function(messages) {
-  console.dir(messages);
-};
+var linter = new Linter;
+linter.on('error', function(message) {
+  console.dir(message);
+});
 
 if (process.argv.length > 2) {
   var fs = require('fs');
-  linter.lint('' + fs.readFileSync(process.argv[2]), next);
+  linter.lint('' + fs.readFileSync(process.argv[2]));
 } else {
   var input = '';
   process.stdin.on('data', function(more){ input += more; });
   process.stdin.on('end', function() {
-    linter.lint(input, next);
+    linter.lint(input);
   });
 }

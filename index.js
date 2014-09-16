@@ -1,3 +1,5 @@
+var EventEmitter = require('events').EventEmitter;
+
 var esprima = require('esprima');
 var Dispatcher = require('esdispatch');
 var TokenManager = require('./lib/TokenManager');
@@ -14,27 +16,27 @@ var RULE_OPTIONS = {};
 var SEVERITIES = { IGNORE: 0, WARN: 1, ERROR: 2 };
 
 function escapeRegExp(s) {
-    return s.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    return s.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
 }
 
 function template(message, replacements) {
     Object.keys(replacements).forEach(function (key) {
-        var rx = new RegExp("{{" + escapeRegExp(key) + "}}", "g");
+        var rx = new RegExp('{{' + escapeRegExp(key) + '}}', 'g');
         message = message.replace(rx, replacements[key]);
     });
     return message;
 }
 
-function reporterGeneratorGenerator(messages) {
+function reporterGeneratorGenerator(emitter) {
   return function(ruleId) {
     return function report(node, location, message, replacements) {
-      if (typeof location === "string") {
+      if (typeof location === 'string') {
           replacements = message;
           message = location;
           location = node.loc.start;
       }
 
-      messages.push({
+      emitter.emit('error', {
           ruleId: ruleId,
           severity: SEVERITIES.ERROR,
           node: node,
@@ -47,9 +49,11 @@ function reporterGeneratorGenerator(messages) {
   }
 }
 
-function lint(js, cb) {
+function Linter(){}
+Linter.prototype = Object.create(EventEmitter.prototype);
+Linter.prototype.lint = function lint(js) {
   // replace shebang with single-line comment
-  js = js.replace(/^#!([^\r\n]+[\r\n]+)/, "//$1");
+  js = js.replace(/^#!([^\r\n]+[\r\n]+)/, '//$1');
 
   try {
     var ast = esprima.parse(js, {
@@ -61,21 +65,20 @@ function lint(js, cb) {
       attachComment: true
     });
   } catch(e) {
-    cb([{
-      ruleId: "",
+    this.emit('error', {
+      ruleId: 'syntax-error',
       severity: SEVERITIES.ERROR,
-      // messages come as "Line X: Unexpected token foo", so strip off leading part
-      message: e.message.substring(e.message.indexOf(":") + 1).trim(),
+      // messages come as 'Line X: Unexpected token foo', so strip off leading part
+      message: e.message.substring(e.message.indexOf(':') + 1).trim(),
       line: e.lineNumber,
       column: e.column,
       source: js.split(/(\r?\n)/)[(e.lineNumber - 1) * 2]
-    }]);
+    });
     return;
   }
 
   var dispatcher = new Dispatcher;
-  var messages = [];
-  var reporterGenerator = reporterGeneratorGenerator(messages);
+  var reporterGenerator = reporterGeneratorGenerator(this);
   var tokenManager = new TokenManager(ast.tokens);
 
   var api = Object.create(tokenManager);
@@ -93,10 +96,8 @@ function lint(js, cb) {
   }
 
   dispatcher.observe(ast, function() {
-    cb(messages);
-  });
+    this.emit('done');
+  }.bind(this));
 }
 
-module.exports = {
-  lint: lint
-};
+module.exports = Linter.Linter = Linter;
