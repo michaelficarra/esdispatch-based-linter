@@ -2,7 +2,7 @@
  * @fileoverview Require spaces around infix operators
  * @author Michael Ficarra
  */
-"use strict";
+'use strict';
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -11,10 +11,10 @@
 module.exports = function(context) {
 
   var OPERATORS = [
-    "*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", "<=", ">", ">=", "in",
-    "instanceof", "==", "!=", "===", "!==", "&", "^", "|", "&&", "||", "=",
-    "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|=",
-    "?", ":", ","
+    '*', '/', '%', '+', '-', '<<', '>>', '>>>', '<', '<=', '>', '>=', 'in',
+    'instanceof', '==', '!=', '===', '!==', '&', '^', '|', '&&', '||', '=',
+    '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=', '&=', '^=', '|=',
+    '?', ':', ','
   ];
 
   function isSpaced(left, right) {
@@ -25,7 +25,7 @@ module.exports = function(context) {
     for (var i = 1, l = tokens.length - 1; i < l; ++i) {
       op = tokens[i];
       if (
-        op.type === "Punctuator" &&
+        op.type === 'Punctuator' &&
           OPERATORS.indexOf(op.value) >= 0 &&
             (tokens[i - 1].range[1] >= op.range[0] || op.range[1] >= tokens[i + 1].range[0])
       ) {
@@ -43,7 +43,7 @@ module.exports = function(context) {
     for (var i = 1, l = tokens.length - 1; i < l; ++i) {
       op = tokens[i];
       if (
-        op.type === "Punctuator" &&
+        op.type === 'Punctuator' &&
           OPERATORS.indexOf(op.value) >= 0 &&
             op.range[1] >= tokens[i + 1].range[0]
       ) {
@@ -54,7 +54,7 @@ module.exports = function(context) {
   }
 
   function report(node) {
-    context.report(node, "Infix operators must be spaced.");
+    context.report(node, 'Infix operators must be spaced.');
   }
 
   function checkBinary(node) {

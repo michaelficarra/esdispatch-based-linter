@@ -8,10 +8,13 @@ var RULES = {
   camelcase: require('./rules/camelcase'),
   'no-void': require('./rules/no-void.js'),
   'no-undefined': require('./rules/no-undefined'),
+  quotes: require('./rules/quotes'),
   'space-infix-ops': require('./rules/space-infix-ops'),
   yoda: require('./rules/yoda'),
 }
-var RULE_OPTIONS = {};
+var RULE_OPTIONS = {
+  quotes: ['single', 'avoid-escape']
+};
 
 var SEVERITIES = { IGNORE: 0, WARN: 1, ERROR: 2 };
 
