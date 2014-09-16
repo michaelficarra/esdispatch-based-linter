@@ -25,24 +25,26 @@ function template(message, replacements) {
     return message;
 }
 
-function reporterGenerator(messages) {
-  return function report(node, location, message, replacements) {
-    if (typeof location === "string") {
-        replacements = message;
-        message = location;
-        location = node.loc.start;
-    }
+function reporterGeneratorGenerator(messages) {
+  return function(ruleId) {
+    return function report(node, location, message, replacements) {
+      if (typeof location === "string") {
+          replacements = message;
+          message = location;
+          location = node.loc.start;
+      }
 
-    messages.push({
-        //ruleId: ruleId,
-        severity: SEVERITIES.ERROR,
-        node: node,
-        message: template(message, replacements || {}),
-        line: location.line,
-        column: location.column,
-        //source: api.getSource(node)
-    });
-  };
+      messages.push({
+          ruleId: ruleId,
+          severity: SEVERITIES.ERROR,
+          node: node,
+          message: template(message, replacements || {}),
+          line: location.line,
+          column: location.column,
+          //source: api.getSource(node)
+      });
+    };
+  }
 }
 
 function lint(js, cb) {
@@ -59,29 +61,30 @@ function lint(js, cb) {
       attachComment: true
     });
   } catch(e) {
-    messages.push({
-        ruleId: "",
-        severity: SEVERITIES.ERROR,
-        // messages come as "Line X: Unexpected token foo", so strip off leading part
-        message: e.message.substring(e.message.indexOf(":") + 1).trim(),
-        line: e.lineNumber,
-        column: e.column,
-        source: js.split(/(\r?\n)/)[(e.lineNumber - 1) * 2]
-    });
-    cb(messages);
+    cb([{
+      ruleId: "",
+      severity: SEVERITIES.ERROR,
+      // messages come as "Line X: Unexpected token foo", so strip off leading part
+      message: e.message.substring(e.message.indexOf(":") + 1).trim(),
+      line: e.lineNumber,
+      column: e.column,
+      source: js.split(/(\r?\n)/)[(e.lineNumber - 1) * 2]
+    }]);
     return;
   }
 
-  var report = reporterGenerator(messages);
+  var dispatcher = new Dispatcher;
+  var messages = [];
+  var reporterGenerator = reporterGeneratorGenerator(messages);
   var tokenManager = new TokenManager(ast.tokens);
 
   var api = Object.create(tokenManager);
-  api.report = report;
 
   for (var ruleId in RULES) {
     if (!{}.hasOwnProperty.call(RULES, ruleId)) continue;
     var context = Object.create(api);
     context.options = {}.hasOwnProperty.call(RULE_OPTIONS, ruleId) ? RULE_OPTIONS[ruleId] : [];
+    context.report = reporterGenerator(ruleId);
     var rule = RULES[ruleId](context);
     for (var query in rule) {
       if (!{}.hasOwnProperty.call(rule, query)) continue;
