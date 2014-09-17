@@ -9,6 +9,7 @@ var RULES = {
   camelcase: require('./rules/camelcase'),
   'no-void': require('./rules/no-void.js'),
   'no-undefined': require('./rules/no-undefined'),
+  'no-unused-vars': require('./rules/no-unused-vars'),
   quotes: require('./rules/quotes'),
   'space-infix-ops': require('./rules/space-infix-ops'),
   yoda: require('./rules/yoda'),
