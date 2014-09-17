@@ -1,18 +1,32 @@
 #!/usr/bin/env node
 var Linter = require('..');
 
+var formatter = require('../formatters/stylish');
+
 var linter = new Linter;
+var errors = [];
 linter.on('error', function(message) {
-  console.dir(message);
+  errors.push(message);
 });
 
 if (process.argv.length > 2) {
   var fs = require('fs');
-  linter.lint('' + fs.readFileSync(process.argv[2]));
+  var filename = process.argv[2];
+  linter.on('done', function() {
+    if (errors.length) {
+      console.log(formatter([{filePath: filename, messages: errors}]));
+    }
+  });
+  linter.lint('' + fs.readFileSync(filename));
 } else {
   var input = '';
   process.stdin.on('data', function(more){ input += more; });
   process.stdin.on('end', function() {
+    linter.on('done', function() {
+      if (errors.length) {
+        console.log(formatter([{filePath: '<stdin>', messages: errors}]));
+      }
+    });
     linter.lint(input);
   });
 }
