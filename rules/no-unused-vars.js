@@ -3,7 +3,7 @@
  * @author Michael Ficarra
  */
 
-"use strict";
+'use strict';
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -12,12 +12,12 @@
 module.exports = function(context) {
 
   var config = {
-    vars: "all",
-    args: "after-used"
+    vars: 'all',
+    args: 'after-used'
   };
 
   if (context.options[0]) {
-    if (typeof(context.options[0]) === "string") {
+    if (typeof(context.options[0]) === 'string') {
       config.vars = context.options[0];
     } else {
       config.vars = context.options[0].vars || config.vars;
@@ -25,7 +25,7 @@ module.exports = function(context) {
     }
   }
 
-  var MESSAGE = "{{name}} is defined but never used";
+  var MESSAGE = '{{name}} is defined but never used';
 
   /**
    * @param {Reference} ref - an escope Reference
@@ -42,27 +42,27 @@ module.exports = function(context) {
   function unusedLocals(scope) {
     var unused = [];
     var variables = scope.variables;
-    if (scope.type !== "global") {
+    if (scope.type !== 'global') {
       for (var i = 0, l = variables.length; i < l; ++i) {
         // skip function expression names
         if (scope.functionExpressionScope) {
           continue;
         }
-        // skip implicit "arguments" variable
-        if (scope.type === "function" && variables[i].name === "arguments" && variables[i].identifiers.length === 0) {
+        // skip implicit 'arguments' variable
+        if (scope.type === 'function' && variables[i].name === 'arguments' && variables[i].identifiers.length === 0) {
           continue;
         }
         var type = variables[i].defs[0].type;
         // skip catch variables
-        if (type === "CatchClause") {
+        if (type === 'CatchClause') {
           continue;
         }
-        // if "args" option is "none", skip any parameter
-        if (config.args === "none" && type === "Parameter") {
+        // if 'args' option is 'none', skip any parameter
+        if (config.args === 'none' && type === 'Parameter') {
           continue;
         }
-        // if "args" option is "after-used", skip all but the last parameter
-        if (config.args === "after-used" && type === "Parameter" && variables[i].defs[0].index < variables[i].defs[0].node.params.length - 1) {
+        // if 'args' option is 'after-used', skip all but the last parameter
+        if (config.args === 'after-used' && type === 'Parameter' && variables[i].defs[0].index < variables[i].defs[0].node.params.length - 1) {
           continue;
         }
         if (variables[i].references.filter(isReadRef).length === 0) {
@@ -80,7 +80,7 @@ module.exports = function(context) {
       var i, l;
 
       // determine unused globals
-      if (config.vars === "all") {
+      if (config.vars === 'all') {
         var unresolvedRefs = globalScope.through.filter(isReadRef).map(function(ref) {
           return ref.identifier.name;
         });
