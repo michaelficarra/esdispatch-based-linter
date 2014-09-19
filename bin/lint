@@ -9,24 +9,22 @@ linter.on('error', function(message) {
   errors.push(message);
 });
 
+var filename;
+linter.on('done', function() {
+  if (errors.length) {
+    console.log(formatter([{filePath: filename, messages: errors}]));
+  }
+});
+
 if (process.argv.length > 2) {
   var fs = require('fs');
-  var filename = process.argv[2];
-  linter.on('done', function() {
-    if (errors.length) {
-      console.log(formatter([{filePath: filename, messages: errors}]));
-    }
-  });
+  filename = process.argv[2];
   linter.lint('' + fs.readFileSync(filename));
 } else {
   var input = '';
   process.stdin.on('data', function(more){ input += more; });
   process.stdin.on('end', function() {
-    linter.on('done', function() {
-      if (errors.length) {
-        console.log(formatter([{filePath: '<stdin>', messages: errors}]));
-      }
-    });
+    filename = '<stdin>';
     linter.lint(input);
   });
 }
