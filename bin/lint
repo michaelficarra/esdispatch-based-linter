@@ -3,28 +3,61 @@ var Linter = require('..');
 
 var formatter = require('../formatters/stylish');
 
-var linter = new Linter;
-var errors = [];
-linter.on('error', function(message) {
-  errors.push(message);
-});
-
-var filename;
-linter.on('done', function() {
-  if (errors.length) {
-    console.log(formatter([{filePath: filename, messages: errors}]));
+function zipWith(f, xs, ys) {
+  var accum = [];
+  for(var i = 0, l = Math.min(xs.length, ys.length); i < l; ++i) {
+    accum[i] = f(xs[i], ys[i]);
   }
-});
+  return accum;
+}
+
+// lint :: [(FilePath, FileContent)] -> Function [(FilePath, [Error])] ()
+function lint(files, cb) {
+  var counter = files.length;
+  var errors = {};
+  function done() {
+    --counter;
+    if (counter <= 0) {
+      cb(Object.getOwnPropertyNames(errors).map(function(filename) {
+        return {filePath: filename, messages: errors[filename]};
+      }));
+    }
+  }
+  for (var i = 0, l = files.length; i < l; ++i) {
+    (function(file) {
+      var linter = new Linter;
+      linter.on('error', function(error) {
+        if (!{}.hasOwnProperty.call(errors, file.path)) {
+          errors[file.path] = [];
+        }
+        errors[file.path].push(error);
+      });
+      linter.on('done', done);
+      linter.lint(file.contents);
+    }(files[i]));
+  }
+}
+
+function showErrors(errors) {
+  if (errors.length) {
+    console.log(formatter(errors));
+  }
+}
 
 if (process.argv.length > 2) {
   var fs = require('fs');
-  filename = process.argv[2];
-  linter.lint('' + fs.readFileSync(filename));
+  var filePaths = process.argv.slice(2);
+  var fileContents = filePaths.map(function(filename) {
+    return '' + fs.readFileSync(filename);
+  });
+  var files = zipWith(function(path, contents) {
+    return {path: path, contents: contents};
+  }, filePaths, fileContents);
+  lint(files, showErrors);
 } else {
   var input = '';
-  process.stdin.on('data', function(more){ input += more; });
+  process.stdin.on('data', function(more) { input += more; });
   process.stdin.on('end', function() {
-    filename = '<stdin>';
-    linter.lint(input);
+    lint([{path: '<stdin>', contents: input}], showErrors);
   });
 }
